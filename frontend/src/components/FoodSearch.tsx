@@ -43,7 +43,7 @@ const FoodSearch = () => {
   });
 
   // Handle errors with toast notifications
-  React.useEffect(() => {
+  useEffect(() => {
     if (error) {
       toast({
         title: 'Error',
@@ -61,7 +61,7 @@ const FoodSearch = () => {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
@@ -85,7 +85,7 @@ const FoodSearch = () => {
             placeholder="Search for food safety information..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
           />
           <InputRightElement width="4.5rem">
             <Button
