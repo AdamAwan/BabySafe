@@ -1,7 +1,7 @@
 import { FoodSearchResponse } from '../types/food';
+import OpenAI from 'openai';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 // List of allowed domains for source URLs
 const ALLOWED_DOMAINS = [
@@ -16,6 +16,16 @@ const ALLOWED_DOMAINS = [
   'parents.com',
   'verywellfamily.com'
 ];
+
+// Interface for OpenAI API response
+interface OpenAIResponse {
+  choices: Array<{
+    message: {
+      content: string;
+    };
+  }>;
+  model: string;
+}
 
 // Function to validate if a URL is from an allowed domain
 const isValidSourceUrl = (url: string): boolean => {
@@ -33,7 +43,7 @@ export const searchFood = async (query: string): Promise<FoodSearchResponse> => 
   }
 
   try {
-    const response = await fetch(OPENAI_API_URL, {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -89,7 +99,11 @@ IMPORTANT:
       throw new Error(`API request failed: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as OpenAIResponse;
+    
+    if (!data || !data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+      throw new Error('Invalid API response format');
+    }
     
     // Extract the content field
     const content = data.choices[0].message.content;
@@ -119,7 +133,7 @@ IMPORTANT:
       return {
         data: parsedData,
         metadata: {
-          model: data.model,
+          model: data.model || 'unknown',
           timestamp: new Date().toISOString(),
         }
       };

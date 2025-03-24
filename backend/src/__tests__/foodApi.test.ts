@@ -2,7 +2,17 @@ import { searchFood } from '../services/foodApi';
 import OpenAI from 'openai';
 
 // Mock OpenAI
-jest.mock('openai');
+jest.mock('openai', () => {
+  return jest.fn().mockImplementation(() => {
+    return {
+      chat: {
+        completions: {
+          create: jest.fn()
+        }
+      }
+    };
+  });
+});
 
 describe('foodApi', () => {
   beforeEach(() => {
@@ -29,17 +39,22 @@ describe('foodApi', () => {
         }
       };
 
-      (OpenAI as jest.Mock).mockImplementation(() => ({
+      // Set up the mock implementation for this test
+      const mockCreate = jest.fn().mockResolvedValue({
+        choices: [{
+          message: {
+            content: JSON.stringify(mockResponse.data)
+          }
+        }],
+        model: 'gpt-4'
+      });
+
+      // Use proper casting to avoid type errors
+      const mockOpenAI = (OpenAI as unknown as jest.Mock<any>);
+      mockOpenAI.mockImplementation(() => ({
         chat: {
           completions: {
-            create: jest.fn().mockResolvedValue({
-              choices: [{
-                message: {
-                  content: JSON.stringify(mockResponse.data)
-                }
-              }],
-              model: 'gpt-4'
-            })
+            create: mockCreate
           }
         }
       }));
@@ -49,7 +64,9 @@ describe('foodApi', () => {
     });
 
     it('should handle API errors gracefully', async () => {
-      (OpenAI as jest.Mock).mockImplementation(() => ({
+      // Use proper casting to avoid type errors
+      const mockOpenAI = (OpenAI as unknown as jest.Mock<any>);
+      mockOpenAI.mockImplementation(() => ({
         chat: {
           completions: {
             create: jest.fn().mockRejectedValue(new Error('API Error'))
@@ -75,7 +92,9 @@ describe('foodApi', () => {
         }
       };
 
-      (OpenAI as jest.Mock).mockImplementation(() => ({
+      // Use proper casting to avoid type errors
+      const mockOpenAI = (OpenAI as unknown as jest.Mock<any>);
+      mockOpenAI.mockImplementation(() => ({
         chat: {
           completions: {
             create: jest.fn().mockResolvedValue({
